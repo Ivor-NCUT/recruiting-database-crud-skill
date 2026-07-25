@@ -10,10 +10,11 @@ Operate through the workbench business API. Never open, copy, patch, or run SQL 
 ## Workflow
 
 1. Read [references/api-contract.md](references/api-contract.md) and select the domain endpoint.
-2. For updates or deletes, read the current record first and retain its version field when the endpoint requires one.
-3. Treat create, update, archive, restore, and delete as writes. Proceed only when the user requested that mutation; otherwise use `--dry-run`.
-4. Run `scripts/workbench_db.py`. Pass complex JSON through `--file` instead of shell interpolation.
-5. Re-read the affected record or collection and report the confirmed result.
+2. Before the first operation in a runtime, call `GET /healthz` and stop if the database is not ready.
+3. For updates or deletes, read the current record first and retain its version field when the endpoint requires one.
+4. Treat create, update, archive, restore, and delete as writes. Proceed only when the user requested that mutation; otherwise use `--dry-run`.
+5. Run `scripts/workbench_db.py`. Pass complex JSON through `--file` instead of shell interpolation.
+6. Re-read the affected record or collection and report the confirmed result.
 
 ## Commands
 
