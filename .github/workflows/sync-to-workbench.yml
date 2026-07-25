@@ -36,7 +36,7 @@ jobs:
           cd target
           git checkout -B sync/recruiting-database-crud origin/main
           cd ..
-          rsync -a --delete --exclude .git --exclude .github --exclude .gitignore \
+          rsync -a --delete --exclude .git --exclude .github --exclude .gitignore --exclude target \
             ./ target/.codex/skills/recruiting-database-crud/
           cd target
           if git diff --quiet && [ -z "$(git status --short)" ]; then exit 0; fi
