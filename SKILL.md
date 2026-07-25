@@ -13,26 +13,26 @@ Operate through the workbench business API. Never open, copy, patch, or run SQL 
 2. Before the first operation in a runtime, call `GET /healthz` and stop if the database is not ready.
 3. For updates or deletes, read the current record first and retain its version field when the endpoint requires one.
 4. Treat create, update, archive, restore, and delete as writes. Proceed only when the user requested that mutation; otherwise use `--dry-run`.
-5. Run `scripts/workbench_db.py`. Pass complex JSON through `--file` instead of shell interpolation.
+5. Run `scripts/workbench-db`. Pass complex JSON through `--file` instead of shell interpolation.
 6. Re-read the affected record or collection and report the confirmed result.
 
 ## Commands
 
 ```bash
-python3 scripts/workbench_db.py request GET '/api/candidates?q=Agent'
-python3 scripts/workbench_db.py request POST /api/candidates \
+scripts/workbench-db request GET '/api/candidates?q=Agent'
+scripts/workbench-db request POST /api/candidates \
   --file /tmp/candidate.json --idempotency-key candidate-source-123 --confirm-write
-python3 scripts/workbench_db.py request PATCH /api/candidates/CANDIDATE_ID \
+scripts/workbench-db request PATCH /api/candidates/CANDIDATE_ID \
   --data '{"city":"上海"}' --confirm-write
-python3 scripts/workbench_db.py request DELETE /api/candidates/CANDIDATE_ID --confirm-write
-python3 scripts/workbench_db.py request POST /api/candidates/CANDIDATE_ID/restore --confirm-write
+scripts/workbench-db request DELETE /api/candidates/CANDIDATE_ID --confirm-write
+scripts/workbench-db request POST /api/candidates/CANDIDATE_ID/restore --confirm-write
 ```
 
 Use `configure` only when the runtime has not already received `WORKBENCH_URL` and
 `WORKBENCH_DATABASE_API_TOKEN`. Pipe the token through stdin so it never appears in shell history:
 
 ```bash
-printf '%s' "$TOKEN" | python3 scripts/workbench_db.py configure \
+printf '%s' "$TOKEN" | scripts/workbench-db configure \
   --url https://your-workbench.example --token-stdin
 ```
 

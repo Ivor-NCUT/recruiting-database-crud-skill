@@ -1,0 +1,39 @@
+import assert from "node:assert/strict";
+import { chmod, mkdtemp, readFile, stat } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { spawn } from "node:child_process";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+import { normalizePath } from "../scripts/workbench-db.mjs";
+
+const script = fileURLToPath(new URL("../scripts/workbench-db.mjs", import.meta.url));
+
+test("allows business APIs and rejects isolated endpoint families", () => {
+  assert.equal(normalizePath("/api/candidates?q=Agent"), "/api/candidates?q=Agent");
+  for (const path of [
+    "/api/connector/tasks/claim",
+    "/api/candidate-ingest/tasks",
+    "/api/public/jd-intakes",
+    "https://example.com/api/candidates",
+  ]) assert.throws(() => normalizePath(path));
+});
+
+test("configure writes an owner-only config without echoing the token", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "workbench-db-"));
+  const config = join(directory, "config.json");
+  const child = spawn(process.execPath, [
+    script, "configure", "--url", "https://workbench.example",
+    "--token-stdin", "--config", config,
+  ], { stdio: ["pipe", "pipe", "pipe"] });
+  child.stdin.end("x".repeat(40));
+  const stdout = [];
+  for await (const chunk of child.stdout) stdout.push(chunk);
+  const exitCode = await new Promise((resolve) => child.on("close", resolve));
+  assert.equal(exitCode, 0);
+  assert.equal(JSON.parse(Buffer.concat(stdout).toString()).configured, true);
+  assert.equal(JSON.parse(await readFile(config, "utf8")).url, "https://workbench.example");
+  assert.equal((await stat(config)).mode & 0o777, 0o600);
+  await chmod(config, 0o600);
+});
