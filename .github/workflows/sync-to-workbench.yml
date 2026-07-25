@@ -1,6 +1,7 @@
 name: Sync skill to recruiting workbench
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths-ignore:
