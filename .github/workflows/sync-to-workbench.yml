@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate skill
-        run: python3 tests/test_workbench_db.py
+        run: node --test tests/workbench-db.test.mjs
       - name: Configure workbench deploy key
         env:
           DEPLOY_KEY: ${{ secrets.WORKBENCH_DEPLOY_KEY }}
