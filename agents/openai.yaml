@@ -1,0 +1,4 @@
+interface:
+  display_name: "招聘数据库管家@泛函"
+  short_description: "通过安全业务 API 查询、新增、更新和归档招聘数据库记录"
+  default_prompt: "Use $recruiting-database-crud to query or safely update my recruiting workbench database."

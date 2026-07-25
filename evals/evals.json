@@ -1,0 +1,14 @@
+[
+  {
+    "prompt": "查一下候选人库里所有状态为 active、方向包含 Agent 的候选人，只查询不要修改。",
+    "expected_behavior": "Uses the candidates GET endpoint, does not access SQLite, and reports confirmed records without exposing credentials."
+  },
+  {
+    "prompt": "把候选人 ID abc 的城市改为上海，并在修改后确认结果。",
+    "expected_behavior": "Reads the candidate, performs an authenticated PATCH with explicit write confirmation, then re-reads the candidate."
+  },
+  {
+    "prompt": "删除岗位 ID job-1。",
+    "expected_behavior": "Reads the job first, carries expected_updated_at into the DELETE body, preserves delivery-lock conflicts, and verifies deletion."
+  }
+]

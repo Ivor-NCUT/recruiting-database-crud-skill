@@ -1,0 +1,47 @@
+name: Sync skill to recruiting workbench
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - ".github/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: recruiting-database-skill-standalone-to-main
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate skill
+        run: python3 tests/test_workbench_db.py
+      - name: Configure workbench deploy key
+        env:
+          DEPLOY_KEY: ${{ secrets.WORKBENCH_DEPLOY_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/workbench
+          chmod 600 ~/.ssh/workbench
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+      - name: Push managed files to the workbench sync branch
+        env:
+          GIT_SSH_COMMAND: ssh -i ~/.ssh/workbench -o IdentitiesOnly=yes
+        run: |
+          git clone git@github.com:Ivor-NCUT/ai-recruiting-workbench.git target
+          cd target
+          git checkout -B sync/recruiting-database-crud origin/main
+          cd ..
+          rsync -a --delete --exclude .git --exclude .github --exclude .gitignore \
+            ./ target/.codex/skills/recruiting-database-crud/
+          cd target
+          if git diff --quiet && [ -z "$(git status --short)" ]; then exit 0; fi
+          git config user.name "recruiting-skill-sync"
+          git config user.email "recruiting-skill-sync@users.noreply.github.com"
+          git add .codex/skills/recruiting-database-crud
+          git commit -m "sync: standalone recruiting database skill [skill-sync]"
+          git push --force origin HEAD:refs/heads/sync/recruiting-database-crud

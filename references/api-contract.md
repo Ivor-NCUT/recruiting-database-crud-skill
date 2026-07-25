@@ -1,0 +1,40 @@
+# Workbench database API
+
+Use only the private business endpoints below. The database service token is intentionally rejected by
+Connector, candidate-ingestion, public-share, and authentication endpoints.
+
+## Resources
+
+| Resource | Read | Create | Update | Delete / restore |
+|---|---|---|---|---|
+| Candidates | `GET /api/candidates`, `GET /api/candidates/:id` | `POST /api/candidates` | `PATCH /api/candidates/:id` | `DELETE /api/candidates/:id` archives; `POST /api/candidates/:id/restore` restores |
+| Candidate duplicates | `GET /api/candidate-duplicates` | — | `POST /api/candidate-duplicates/:id/resolve` | — |
+| Jobs | `GET /api/jobs`, `GET /api/jobs/:id` | Submit `POST /api/jd-intakes`; parsing creates jobs asynchronously | `PATCH /api/jobs/:id` | `DELETE /api/jobs/:id` with `{"expected_updated_at":"..."}` |
+| JD intakes | `GET /api/jd-intakes` | `POST /api/jd-intakes` | — | `DELETE /api/jd-intakes/:id` while pending |
+| Matches | `GET /api/matches`, `GET /api/matches/:id` | `POST /api/match-runs` | `PATCH /api/matches/:id` or bulk `PATCH /api/matches` | No direct delete |
+| Reply rules | `GET /api/reply-rules` | `POST /api/reply-rules` | `PATCH /api/reply-rules/:id` | `DELETE /api/reply-rules/:id` |
+| Roadmap | `GET /api/roadmap` | `POST /api/roadmap` | `PATCH /api/roadmap/:id` with `If-Match: "<updatedAt>"` | No delete |
+| Feishu Base mirror | `GET /api/lark-base/tables`, `GET /api/lark-base/tables/:tableId/records` | — | — | — |
+
+## Query parameters
+
+- Candidates: `q`, `status`, `include_archived=true`.
+- Jobs: `q`, `company`, `category`, `fee_sort=asc|desc`.
+- Matches: `q`, `status`, `job_id`.
+- Candidate duplicates: `status`.
+
+## Write rules
+
+- Send JSON and use `--confirm-write`.
+- Supply a stable `--idempotency-key` for candidate creation or ingestion derived from the source record.
+- Read a candidate/job/roadmap record before changing it.
+- Candidate identities, resume hashes, and source email IDs may merge into an existing master record.
+- Candidate archive is the reversible deletion path.
+- Job delete can return `409` when a delivery is locked or `expected_updated_at` is stale.
+- Roadmap update returns `428` without `If-Match` and `409` for a stale version.
+- Treat every non-2xx response as uncommitted until a follow-up read proves otherwise.
+
+## Data boundary
+
+The Feishu Base tables are a lossless read mirror. Clients must write to the owning domain API or to
+Feishu through `lark-cli`; never patch mirror rows directly.
