@@ -8,6 +8,7 @@ Connector, candidate-ingestion, public-share, and authentication endpoints.
 | Resource | Read | Create | Update | Delete / restore |
 |---|---|---|---|---|
 | Candidates | `GET /api/candidates`, `GET /api/candidates/:id` | `POST /api/candidates` | `PATCH /api/candidates/:id` | `DELETE /api/candidates/:id` archives; `POST /api/candidates/:id/restore` restores |
+| Candidate parse tasks | `GET /api/candidate-ingest/parse-tasks/:id` | `POST /api/candidate-ingest/parse-tasks` | — | — |
 | Candidate duplicates | `GET /api/candidate-duplicates` | — | `POST /api/candidate-duplicates/:id/resolve` | — |
 | Jobs | `GET /api/jobs`, `GET /api/jobs/:id` | Submit `POST /api/jd-intakes`; parsing creates jobs asynchronously | `PATCH /api/jobs/:id` | `DELETE /api/jobs/:id` with `{"expected_updated_at":"..."}` |
 | JD intakes | `GET /api/jd-intakes` | `POST /api/jd-intakes` | — | `DELETE /api/jd-intakes/:id` while pending |
@@ -27,6 +28,9 @@ Connector, candidate-ingestion, public-share, and authentication endpoints.
 
 - Send JSON and use `--confirm-write`.
 - Supply a stable `--idempotency-key` for candidate creation or ingestion derived from the source record.
+- Candidate parse tasks use the candidate-ingestion token and accept an HMAC `candidateIdentityKey`,
+  uploaded `fileIds`, optional `text`, `portfolio`, and `referrerName`. Completed tasks return the
+  candidate, evidence, and up to ten open-job matches from `job-resume-intelligent-matching-fanhan`.
 - Read a candidate/job/roadmap record before changing it.
 - Candidate identities, resume hashes, and source email IDs may merge into an existing master record.
 - Candidate archive is the reversible deletion path.
