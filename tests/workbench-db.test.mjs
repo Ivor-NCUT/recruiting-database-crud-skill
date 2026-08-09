@@ -3,6 +3,7 @@ import { chmod, mkdtemp, readFile, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
+import { createServer } from "node:http";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -36,4 +37,23 @@ test("configure writes an owner-only config without echoing the token", async ()
   assert.equal(JSON.parse(await readFile(config, "utf8")).url, "https://workbench.example");
   assert.equal((await stat(config)).mode & 0o777, 0o600);
   await chmod(config, 0o600);
+});
+
+test("CRM requests identify Skill, CLI, or MCP entry and carry a request id", async (t) => {
+  let headers;
+  const server = createServer((request, response) => {
+    headers = request.headers;
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end('{"ok":true}');
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => server.close());
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  const child = spawn(process.execPath, [
+    script, "request", "GET", "/api/dashboard", "--entry", "cli", "--request-id", "crm-check-1",
+  ], { env: { ...process.env, WORKBENCH_URL: origin, WORKBENCH_DATABASE_API_TOKEN: "x".repeat(40) } });
+  const exitCode = await new Promise((resolve) => child.on("close", resolve));
+  assert.equal(exitCode, 0);
+  assert.equal(headers["x-workbench-entry"], "cli");
+  assert.equal(headers["x-request-id"], "crm-check-1");
 });

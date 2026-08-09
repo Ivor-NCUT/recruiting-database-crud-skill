@@ -16,6 +16,13 @@ Connector, candidate-ingestion, public-share, and authentication endpoints.
 | Reply rules | `GET /api/reply-rules` | `POST /api/reply-rules` | `PATCH /api/reply-rules/:id` | `DELETE /api/reply-rules/:id` |
 | Roadmap | `GET /api/roadmap` | `POST /api/roadmap` | `PATCH /api/roadmap/:id` with `If-Match: "<updatedAt>"` | No delete |
 | Feishu Base mirror | `GET /api/lark-base/tables`, `GET /api/lark-base/tables/:tableId/records` | — | — | — |
+| CRM cockpit | `GET /api/dashboard` | — | — | — |
+| CRM customers | `GET /api/crm/companies`, `GET /api/crm/companies/:id` | `POST /api/crm/companies` | `PATCH /api/crm/companies/:id` | `DELETE /api/crm/companies/:id`; `POST .../restore` |
+| CRM order leads / orders | `GET /api/crm/order-leads`, `GET /api/crm/orders` | `POST /api/crm/order-leads`; `POST .../convert` | `PATCH /api/crm/order-leads/:id`, `PATCH /api/crm/orders/:id` | reversible archive / restore endpoints |
+| CRM activities | `GET /api/crm/activities`, `GET .../versions` | `POST /api/crm/activities` | `PATCH /api/crm/activities/:id` | `DELETE ...`; `POST .../restore` |
+| Candidate follow-up | `GET /api/crm/candidate-followups`, `GET /api/crm/candidates/:id` | `POST /api/crm/candidate-order-links` | `PATCH /api/crm/candidates/:id` | — |
+| Interview CRM | `GET /api/crm/interviews`, `GET /api/crm/interviews/:id` | `POST .../drafts` | `PATCH /api/crm/interviews/:id`, `PATCH .../interview-drafts/:id` | — |
+| Receivables | `GET /api/crm/receivables` | `POST .../reminders`, `POST .../postpone`, `POST .../settle` | — | — |
 
 ## Query parameters
 
@@ -37,6 +44,8 @@ Connector, candidate-ingestion, public-share, and authentication endpoints.
 - Job delete can return `409` when a delivery is locked or `expected_updated_at` is stale.
 - Roadmap update returns `428` without `If-Match` and `409` for a stale version.
 - Treat every non-2xx response as uncommitted until a follow-up read proves otherwise.
+- Send `x-workbench-entry: skill|cli|mcp` and `x-request-id` (the CLI flags are `--entry` and
+  `--request-id`). CRM audit records retain the Agent entry identity, request ID, and before/after facts.
 
 ## Data boundary
 

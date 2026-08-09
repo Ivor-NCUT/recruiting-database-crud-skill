@@ -1,6 +1,6 @@
 ---
 name: recruiting-database-crud
-description: Safely query, create, update, archive, restore, or delete records in the AI recruiting workbench through its authenticated business APIs. Use when Codex needs to inspect or change candidates, jobs, matches, JD intakes, reply rules, roadmap requirements, or mirrored Feishu Base data in the local or cloud recruiting database.
+description: Safely query or change recruiting and CRM records through the AI recruiting workbench authenticated business APIs. Use when Codex needs candidates, jobs, matches, customers, order leads, orders, activities, follow-ups, interviews, receivables, JD intakes, reply rules, roadmap requirements, or mirrored Feishu Base data.
 ---
 
 # Recruiting Database CRUD
@@ -26,7 +26,15 @@ scripts/workbench-db request PATCH /api/candidates/CANDIDATE_ID \
   --data '{"city":"上海"}' --confirm-write
 scripts/workbench-db request DELETE /api/candidates/CANDIDATE_ID --confirm-write
 scripts/workbench-db request POST /api/candidates/CANDIDATE_ID/restore --confirm-write
+scripts/workbench-db request GET /api/dashboard
+scripts/workbench-db request GET /api/crm/candidate-followups
+scripts/workbench-db request POST /api/crm/activities \
+  --file /tmp/activity.json --confirm-write --request-id activity-source-123
 ```
+
+`--entry` accepts `skill`, `cli`, or `mcp` and defaults to `skill`. Direct terminal use should pass
+`--entry cli`; an MCP adapter should pass `--entry mcp`. Every call carries a request ID, and callers
+should provide a stable `--request-id` for traceable business writes.
 
 Use `configure` only when the runtime has not already received `WORKBENCH_URL` and
 `WORKBENCH_DATABASE_API_TOKEN`. Pipe the token through stdin so it never appears in shell history:
@@ -44,3 +52,5 @@ printf '%s' "$TOKEN" | scripts/workbench-db configure \
 - Job deletion requires `expected_updated_at` and may be blocked by delivery locks.
 - Feishu Base mirror endpoints are read-only. Do not mutate the mirror as a substitute for writing Feishu.
 - Preserve 409/428 conflicts. Re-read and resolve them; do not silently overwrite newer data.
+- Matching scores, reminders, and generated copy remain suggestions from their owning Skills. This
+  Skill records facts and confirmed choices; it does not reproduce recruiting algorithms.

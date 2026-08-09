@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
 import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const METHODS = new Set(["GET", "POST", "PATCH", "DELETE"]);
 const DENIED = ["/api/auth/", "/api/candidate-ingest/", "/api/connector/", "/api/public/"];
+const ENTRIES = new Set(["skill", "cli", "mcp"]);
 
 function fail(message) {
   throw new Error(message);
@@ -129,10 +131,13 @@ async function request(args) {
     fail("write requests require --confirm-write or --dry-run");
   }
   if (dryRun) {
+    const entry = String(option(args, "--entry") || "skill").toLowerCase();
+    if (!ENTRIES.has(entry)) fail("--entry must be skill, cli, or mcp");
     emit({
       dry_run: true,
       method,
       path,
+      entry,
       has_body: body !== undefined,
       if_match: Boolean(option(args, "--if-match")),
       idempotency_key: Boolean(option(args, "--idempotency-key")),
@@ -142,6 +147,10 @@ async function request(args) {
 
   const config = await loadConfig(option(args, "--config"));
   const headers = { accept: "application/json", authorization: `Bearer ${config.token}` };
+  const entry = String(option(args, "--entry") || "skill").toLowerCase();
+  if (!ENTRIES.has(entry)) fail("--entry must be skill, cli, or mcp");
+  headers["x-workbench-entry"] = entry;
+  headers["x-request-id"] = String(option(args, "--request-id") || option(args, "--idempotency-key") || randomUUID());
   if (body !== undefined) headers["content-type"] = "application/json";
   const etag = option(args, "--if-match");
   const idempotencyKey = option(args, "--idempotency-key");
