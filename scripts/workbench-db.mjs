@@ -141,6 +141,7 @@ async function request(args) {
       has_body: body !== undefined,
       if_match: Boolean(option(args, "--if-match")),
       idempotency_key: Boolean(option(args, "--idempotency-key")),
+      actor_id: Boolean(option(args, "--actor-id")),
     });
     return;
   }
@@ -151,6 +152,12 @@ async function request(args) {
   if (!ENTRIES.has(entry)) fail("--entry must be skill, cli, or mcp");
   headers["x-workbench-entry"] = entry;
   headers["x-request-id"] = String(option(args, "--request-id") || option(args, "--idempotency-key") || randomUUID());
+  const actorId = option(args, "--actor-id");
+  if (actorId) {
+    const normalizedActor = String(actorId).trim();
+    if (!/^[A-Za-z0-9:_-]{1,200}$/.test(normalizedActor)) fail("--actor-id is invalid");
+    headers["x-allen-actor-id"] = normalizedActor;
+  }
   if (body !== undefined) headers["content-type"] = "application/json";
   const etag = option(args, "--if-match");
   const idempotencyKey = option(args, "--idempotency-key");

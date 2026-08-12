@@ -57,3 +57,20 @@ test("CRM requests identify Skill, CLI, or MCP entry and carry a request id", as
   assert.equal(headers["x-workbench-entry"], "cli");
   assert.equal(headers["x-request-id"], "crm-check-1");
 });
+
+test("enterprise memory source actor is carried only in the validated header", async (t) => {
+  let headers;
+  const server = createServer((request, response) => {
+    headers = request.headers;
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end('{"ok":true}');
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => server.close());
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  const child = spawn(process.execPath, [
+    script, "request", "GET", "/api/dashboard", "--actor-id", "ou_message_sender",
+  ], { env: { ...process.env, WORKBENCH_URL: origin, WORKBENCH_DATABASE_API_TOKEN: "x".repeat(40) } });
+  assert.equal(await new Promise((resolve) => child.on("close", resolve)), 0);
+  assert.equal(headers["x-allen-actor-id"], "ou_message_sender");
+});

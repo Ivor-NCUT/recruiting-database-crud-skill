@@ -30,11 +30,15 @@ scripts/workbench-db request GET /api/dashboard
 scripts/workbench-db request GET /api/crm/candidate-followups
 scripts/workbench-db request POST /api/crm/activities \
   --file /tmp/activity.json --confirm-write --request-id activity-source-123
+scripts/workbench-db request POST /api/enterprise/chats/CHAT_ID/memory \
+  --file /tmp/preference.json --actor-id MESSAGE_SENDER_OPEN_ID --confirm-write
 ```
 
 `--entry` accepts `skill`, `cli`, or `mcp` and defaults to `skill`. Direct terminal use should pass
 `--entry cli`; an MCP adapter should pass `--entry mcp`. Every call carries a request ID, and callers
 should provide a stable `--request-id` for traceable business writes.
+For enterprise memory extracted from a group message, pass the observed sender with `--actor-id`;
+the API ignores a source actor embedded in the JSON body.
 
 Use `configure` only when the runtime has not already received `WORKBENCH_URL` and
 `WORKBENCH_DATABASE_API_TOKEN`. Pipe the token through stdin so it never appears in shell history:

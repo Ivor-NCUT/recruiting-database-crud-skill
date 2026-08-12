@@ -23,6 +23,8 @@ Connector, candidate-ingestion, public-share, and authentication endpoints.
 | Candidate follow-up | `GET /api/crm/candidate-followups`, `GET /api/crm/candidates/:id` | `POST /api/crm/candidate-order-links` | `PATCH /api/crm/candidates/:id` | — |
 | Interview CRM | `GET /api/crm/interviews`, `GET /api/crm/interviews/:id` | `POST .../drafts` | `PATCH /api/crm/interviews/:id`, `PATCH .../interview-drafts/:id` | — |
 | Receivables | `GET /api/crm/receivables` | `POST .../reminders`, `POST .../postpone`, `POST .../settle` | — | — |
+| Enterprise preference memory | `GET /api/enterprise/chats/:chatId/memory?job_id=:jobId` | `POST /api/enterprise/chats/:chatId/memory` | `POST .../memory/conflicts/:conflictId` | `DELETE /api/enterprise/chats/:chatId/memory` |
+| Enterprise memory scan cursor | `GET /api/enterprise/memory-scans/:chatId` | — | `PUT /api/enterprise/memory-scans/:chatId` after a complete scan | — |
 
 ## Query parameters
 
@@ -44,6 +46,15 @@ Connector, candidate-ingestion, public-share, and authentication endpoints.
 - Job delete can return `409` when a delivery is locked or `expected_updated_at` is stale.
 - Roadmap update returns `428` without `If-Match` and `409` for a stale version.
 - Treat every non-2xx response as uncommitted until a follow-up read proves otherwise.
+- Preference memory writes accept `key`, `value`, `source_kind=explicit|inferred`,
+  `strength=hard|soft`, optional `job_id`, `source_actor_id`, `source_message_id`,
+  `confidence`, `long_term`, and `expires_at`. Inferred items are always soft. The source actor is
+  taken only from `x-allen-actor-id`; callers must set that header to the observed message sender.
+- A changed value returns `status=conflict`; do not overwrite it. Use the latest value only for the
+  current task, ask the group once, then resolve with `{"action":"update"}` or `{"action":"keep"}`.
+- Forgetting removes the preference content and leaves only a content-free audit event.
+- Scan cursors advance only after every message in the interval was processed and any consolidated
+  conflict question was confirmed sent.
 - Send `x-workbench-entry: skill|cli|mcp` and `x-request-id` (the CLI flags are `--entry` and
   `--request-id`). CRM audit records retain the Agent entry identity, request ID, and before/after facts.
 
