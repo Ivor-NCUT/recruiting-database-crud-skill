@@ -5,12 +5,12 @@ description: Safely query or change recruiting and CRM records through the AI re
 
 # Recruiting Database CRUD
 
-Operate through the workbench business API. Never open, copy, patch, or run SQL against `workbench.sqlite`.
+Operate through the production cloud workbench business API. It is the only source of truth for candidate reads and writes, including calls made by local Codex, Cloud Codex, and Bridge. Never open, copy, patch, or run SQL against `workbench.sqlite`, and never fall back to a local candidate database when the cloud API is unavailable.
 
 ## Workflow
 
 1. Read [references/api-contract.md](references/api-contract.md) and select the domain endpoint.
-2. Before the first operation in a runtime, call `GET /healthz` and stop if the database is not ready.
+2. Before the first operation in a runtime, call `GET /healthz` and stop unless `mode` is `cloud`, `environment` is `production`, and the database is ready.
 3. For updates or deletes, read the current record first and retain its version field when the endpoint requires one.
 4. Treat create, update, archive, restore, and delete as writes. Proceed only when the user requested that mutation; otherwise use `--dry-run`.
 5. Run `scripts/workbench-db`. Pass complex JSON through `--file` instead of shell interpolation.
