@@ -7,6 +7,7 @@ Connector, candidate-ingestion, public-share, and authentication endpoints.
 
 | Resource | Read | Create | Update | Delete / restore |
 |---|---|---|---|---|
+| Enterprise admission | `GET /api/enterprise/chats/:chatId/admission` with current actor | `POST /api/enterprise/chats/:chatId/admission` with enterprise name and current actor | `PATCH /api/enterprise/chats/:chatId/admission` | — |
 | Candidates | `GET /api/candidates`, `GET /api/candidates/:id` | `POST /api/candidates` | `PATCH /api/candidates/:id` | `DELETE /api/candidates/:id` archives; `POST /api/candidates/:id/restore` restores |
 | Candidate parse tasks | `GET /api/candidate-ingest/parse-tasks/:id` | `POST /api/candidate-ingest/parse-tasks` | — | — |
 | Candidate duplicates | `GET /api/candidate-duplicates` | — | `POST /api/candidate-duplicates/:id/resolve` | — |
@@ -36,6 +37,7 @@ Connector, candidate-ingestion, public-share, and authentication endpoints.
 ## Write rules
 
 - Send JSON and use `--confirm-write`.
+- Bridge admission is separate from `/invite group`. After a `404`, accept only `确认企业准入｜公司全称` from the same trusted event sender, create and re-read admission with the current event `chat_id` and actor, then resume the original request once.
 - Supply a stable `--idempotency-key` for candidate creation or ingestion derived from the source record.
 - Candidate parse tasks use the candidate-ingestion token and accept an HMAC `candidateIdentityKey`,
   uploaded `fileIds`, optional `text`, `portfolio`, and `referrerName`. Completed tasks return the

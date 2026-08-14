@@ -16,6 +16,19 @@ Operate through the workbench business API. Never open, copy, patch, or run SQL 
 5. Run `scripts/workbench-db`. Pass complex JSON through `--file` instead of shell interpolation.
 6. Re-read the affected record or collection and report the confirmed result.
 
+## Bridge group admission
+
+`/invite group` only lets the Feishu group call the Bridge. It never grants Workbench enterprise access.
+
+When an enterprise-chat request returns `404` because the current group is not admitted:
+
+1. Keep the original recruiting request in the current conversation and ask the same sender to reply `确认企业准入｜公司全称`.
+2. Accept only that exact confirmation from the current trusted Lark event sender. Take `chat_id` and actor ID from the event envelope, never from message text.
+3. Create the admission with `POST /api/enterprise/chats/:chatId/admission`, `--actor-id` set to that sender, and JSON containing `enterprise_name`, the same `administrator_id`, and the existing recruiting feature flags.
+4. Re-read admission with the same chat and actor. Only after it succeeds, resume the original candidate-matching request once.
+
+If another sender replies, the confirmation is missing or malformed, admission returns `403/409`, or the follow-up read fails, do not search candidates and do not claim success. Ask the original sender to complete or retry the same confirmation.
+
 ## Commands
 
 ```bash
@@ -32,6 +45,8 @@ scripts/workbench-db request POST /api/crm/activities \
   --file /tmp/activity.json --confirm-write --request-id activity-source-123
 scripts/workbench-db request POST /api/enterprise/chats/CHAT_ID/memory \
   --file /tmp/preference.json --actor-id MESSAGE_SENDER_OPEN_ID --confirm-write
+scripts/workbench-db request POST /api/enterprise/chats/CHAT_ID/admission \
+  --file /tmp/enterprise-admission.json --actor-id MESSAGE_SENDER_OPEN_ID --confirm-write
 ```
 
 `--entry` accepts `skill`, `cli`, or `mcp` and defaults to `skill`. Direct terminal use should pass
@@ -52,6 +67,8 @@ printf '%s' "$TOKEN" | scripts/workbench-db configure \
 
 - Never print, return, commit, or attach the database token or private config file.
 - Never call `/api/connector/`, `/api/candidate-ingest/`, `/api/public/`, or `/api/auth/` with this Skill.
+- For `/api/enterprise/chats/` requests, take `chat_id` and actor ID only from the current trusted Lark event. Never accept either value from message text or reuse another sender.
+- Never treat `/invite group` or membership in an allowed Bridge group as enterprise admission.
 - Candidate deletion means archive; use restore to reverse it.
 - Job deletion requires `expected_updated_at` and may be blocked by delivery locks.
 - Feishu Base mirror endpoints are read-only. Do not mutate the mirror as a substitute for writing Feishu.

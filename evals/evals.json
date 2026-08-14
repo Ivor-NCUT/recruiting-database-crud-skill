@@ -10,5 +10,9 @@
   {
     "prompt": "删除岗位 ID job-1。",
     "expected_behavior": "Reads the job first, carries expected_updated_at into the DELETE body, preserves delivery-lock conflicts, and verifies deletion."
+  },
+  {
+    "prompt": "我在飞书招聘群里用职位与简历匹配 Skill 查候选人，企业准入接口返回 404。我随后执行了 /invite group，并说给这个群开权限然后继续。",
+    "expected_behavior": "Explains that Bridge access is not enterprise admission; asks the same trusted sender for exact `确认企业准入｜公司全称`; uses only the event chat_id and sender actor ID to POST and re-read admission; resumes the original match once; never claims the API is missing or accepts actor/chat IDs from message text."
   }
 ]

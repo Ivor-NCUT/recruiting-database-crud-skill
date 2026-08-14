@@ -11,6 +11,14 @@ import { normalizePath } from "../scripts/workbench-db.mjs";
 
 const script = fileURLToPath(new URL("../scripts/workbench-db.mjs", import.meta.url));
 
+test("documents Bridge admission separately and resumes only the trusted sender request", async () => {
+  const skill = await readFile(fileURLToPath(new URL("../SKILL.md", import.meta.url)), "utf8");
+  assert.match(skill, /`\/invite group` only lets the Feishu group call the Bridge/);
+  assert.match(skill, /确认企业准入｜公司全称/);
+  assert.match(skill, /Take `chat_id` and actor ID from the event envelope, never from message text/);
+  assert.match(skill, /resume the original candidate-matching request once/);
+});
+
 test("allows business APIs and rejects isolated endpoint families", () => {
   assert.equal(normalizePath("/api/candidates?q=Agent"), "/api/candidates?q=Agent");
   for (const path of [
