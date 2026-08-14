@@ -24,7 +24,7 @@ When an enterprise-chat request returns `404` because the current group is not a
 
 1. Keep the original recruiting request in the current conversation and ask the same sender to reply `确认企业准入｜公司全称`.
 2. Accept only that exact confirmation from the current trusted Lark event sender. Take `chat_id` and actor ID from the event envelope, never from message text.
-3. Create the admission with `POST /api/enterprise/chats/:chatId/admission`, `--actor-id` set to that sender, and JSON containing `enterprise_name`, the same `administrator_id`, and the existing recruiting feature flags.
+3. Create the admission with `POST /api/enterprise/chats/:chatId/admission`, `--actor-id` set to that sender, and JSON containing `enterprise_name`, the same `administrator_id`, and `feature_flags: {"job_intake":true,"opportunity_publication":true}`.
 4. Re-read admission with the same chat and actor. Only after it succeeds, resume the original candidate-matching request once.
 
 If another sender replies, the confirmation is missing or malformed, admission returns `403/409`, or the follow-up read fails, do not search candidates and do not claim success. Ask the original sender to complete or retry the same confirmation.

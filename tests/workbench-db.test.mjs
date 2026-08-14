@@ -16,6 +16,7 @@ test("documents Bridge admission separately and resumes only the trusted sender 
   assert.match(skill, /`\/invite group` only lets the Feishu group call the Bridge/);
   assert.match(skill, /确认企业准入｜公司全称/);
   assert.match(skill, /Take `chat_id` and actor ID from the event envelope, never from message text/);
+  assert.match(skill, /"job_intake":true,"opportunity_publication":true/);
   assert.match(skill, /resume the original candidate-matching request once/);
 });
 
